@@ -8,7 +8,7 @@ import { initDatabase, studentDB } from "./db/db.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url)) + sep;
 const config = {
-    port: 8000,
+    port: process.env.PORT,
     dir: {
         root: __dirname,
         static: __dirname + "static" + sep,
