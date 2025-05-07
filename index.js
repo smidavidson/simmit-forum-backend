@@ -23,7 +23,7 @@ app.set("views", config.dir.views);
 app.use(express.urlencoded({ extended: true }));
 app.use((req, res, next) => {
     console.log(JSON.stringify(req.headers));
-    const ip = req.headers['x-forward-for'];
+    const ip = req.headers['x-forwarded-for'];
     console.log(`Request from IP: ${ip}`);
     next();
 })
