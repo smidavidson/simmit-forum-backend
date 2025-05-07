@@ -12,13 +12,13 @@ const config = {
     dir: {
         root: __dirname,
         static: __dirname + "static" + sep,
-        views: __dirname + "views" + sep,
     },
 };
 
 const app = express();
-app.set("view engine", "ejs");
-app.set("views", config.dir.views);
+
+app.set('trust proxy', true);
+
 
 app.use(express.urlencoded({ extended: true }));
 app.use((req, res, next) => {
