@@ -4,6 +4,7 @@ import '@dotenvx/dotenvx/config';
 import { fileURLToPath } from "url";
 import { dirname, sep } from "path";
 import express from "express";
+import rateLimit from 'express-rate-limit';
 import { initDatabase, studentDB } from "./db/db.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url)) + sep;
@@ -17,8 +18,17 @@ const config = {
 
 const app = express();
 
+const limiter = rateLimit({
+    legacyHeaders: false,
+    standardHeaders: true,
+    windowMs: 1 * 1000,
+    max: 1,
+    message: {error: "Too many requests sent, please try again later"}
+})
 
 app.use(express.urlencoded({ extended: true }));
+app.use(limiter);
+
 app.use((req, res, next) => {
     console.log(JSON.stringify(req.headers));
     const ip = req.headers['x-forwarded-for'];
