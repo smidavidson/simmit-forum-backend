@@ -21,7 +21,12 @@ app.set("view engine", "ejs");
 app.set("views", config.dir.views);
 
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(config.dir.static));
+app.use((req, res, next) => {
+    console.log(JSON.stringify(req.headers));
+    const ip = req.headers['x-forward-for'];
+    console.log(`Request from IP: ${ip}`);
+    next();
+})
 
 async function startServer() {
     try {
