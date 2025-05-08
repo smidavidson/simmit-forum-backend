@@ -12,7 +12,6 @@ const config = {
     port: process.env.PORT,
     dir: {
         root: __dirname,
-        static: __dirname + "static" + sep,
     },
 };
 
