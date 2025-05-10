@@ -57,5 +57,3 @@ export async function deleteStudent({ student_id }) {
         throw error;
     }
 }
-
-// Add more later
