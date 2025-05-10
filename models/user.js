@@ -6,6 +6,7 @@ import {
     generateRefreshToken,
 } from "../utils/jwt.js";
 import * as refreshTokenDB from "./refreshToken.js";
+import * as usersRolesDB from "../models/usersRoles.js";
 
 export async function getUserByUsername({ username }) {
     try {
@@ -40,10 +41,7 @@ export async function registerUser({ username, password }) {
 
         const user = registerResults.rows[0];
 
-        const userRolesResults = await pool.query(
-            `INSERT INTO users_roles (user_id) VALUES ($1) RETURNING user_id, role`,
-            [user.user_id]
-        );
+        const userRolesResults = await usersRolesDB.insertUserIntoUserRole({user_id: user.user_id});
 
         return registerResults.rows;
     } catch (error) {

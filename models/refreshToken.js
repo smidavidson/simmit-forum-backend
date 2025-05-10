@@ -37,7 +37,7 @@ export async function updateRefreshToken(
 
         // Get old refresh token
         const oldRefreshTokenResults = await client.query(
-            `SELECT user_id FROM refresh_tokens WHERE token = $1 AND is_revoked = FALSE`,
+            `SELECT user_id FROM refresh_tokens WHERE token = $1 AND is_revoked = FALSE AND expires_at > NOW()`,
             [oldRefreshToken]
         );
         if (oldRefreshTokenResults.rows.length === 0) {

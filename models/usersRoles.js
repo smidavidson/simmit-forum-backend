@@ -12,3 +12,16 @@ export async function getUserRoleByUserId({ user_id }) {
         throw error;
     }
 }
+
+export async function insertUserIntoUserRole({user_id}) {
+	try {
+		const usersRolesResults = await pool.query(
+			`INSERT INTO users_roles VALUES ($1) RETURNING *`,
+			[user_id]
+		)
+		return usersRolesResults.rows;
+	} catch (error) {
+		console.log(`Error in insertUserIntoUserRole(): ${error.message}`);
+		throw error;
+	}
+}
