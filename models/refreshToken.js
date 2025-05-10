@@ -25,3 +25,48 @@ export async function getRefreshToken(refreshToken) {
         throw error;
     }
 }
+
+export async function updateRefreshToken(
+    oldRefreshToken,
+    newRefreshToken,
+    newExpiryDate
+) {
+    const client = await pool.connect();
+    try {
+        await client.query("BEGIN");
+
+        // Get old refresh token
+        const oldRefreshTokenResults = await client.query(
+            `SELECT user_id FROM refresh_tokens WHERE token = $1 AND is_revoked = FALSE`,
+            [oldRefreshToken]
+        );
+        if (oldRefreshTokenResults.rows.length === 0) {
+            await client.query("ROLLBACK");
+            return null;
+        }
+
+        const userId = oldRefreshTokenResults.rows[0].user_id;
+        await client.query(
+            `UPDATE refresh_tokens SET is_revoked = TRUE WHERE token = $1`,
+            [oldRefreshToken]
+        );
+
+        const result = await client.query(
+            `INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, $3) RETURNING token_id`,
+            [userId, newRefreshToken, newExpiryDate]
+        );
+
+        await client.query("COMMIT");
+
+        return {
+            tokenId: result.rows[0].token_id,
+            userId
+        };
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.log(`Error in updateRefreshToken(): ${error.message}`);
+        throw error;
+    } finally {
+        client.release();
+    }
+}

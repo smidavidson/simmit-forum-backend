@@ -1,8 +1,14 @@
 // Handles /auth routing
 import { Router } from "express";
 import * as userDB from "../models/user.js";
+import * as usersRolesDB from "../models/usersRoles.js";
 import * as refreshTokenDB from "../models/refreshToken.js";
-import { generateAccessToken, verifyRefreshToken } from "../utils/jwt.js";
+import {
+    calculateExpiryDate,
+    generateAccessToken,
+    generateRefreshToken,
+    verifyRefreshToken,
+} from "../utils/jwt.js";
 import { authenticateToken, authorizeRole } from "../middleware/auth.js";
 import { getUserRoleByUserId } from "../models/usersRoles.js";
 export const authRoutes = Router();
@@ -55,7 +61,7 @@ authRoutes.get("/my_role", authenticateToken, async (req, res) => {
     }
 });
 
-authRoutes.post("/refresh_access_token", async (req, res) => {
+authRoutes.post("/renew_access_token", async (req, res) => {
     try {
         const { refreshToken } = req.body;
         if (!refreshToken) {
@@ -84,6 +90,61 @@ authRoutes.post("/refresh_access_token", async (req, res) => {
         res.json({ accessToken });
     } catch (error) {
         console.log(`Error in path /refresh_access_token: ${error.message}`);
-        res.status(500).json({ error: "Token refresh failed" });
+        res.status(500).json({ error: "Access token renewal failed" });
+    }
+});
+
+authRoutes.post("/renew_refresh_token", async (req, res) => {
+    try {
+        const { refreshToken } = req.body;
+        if (!refreshToken) {
+            return res.status(400).json({ error: "Refresh token required" });
+        }
+
+        let decodedRefreshToken;
+        try {
+            decodedRefreshToken = verifyRefreshToken(refreshToken);
+        } catch (error) {
+            return res.status(403).json({ error: "Refresh token invalid" });
+        }
+
+        const refreshTokenRecord = refreshTokenDB.getRefreshToken(refreshToken);
+        if (!refreshTokenRecord) {
+            return res
+                .status(403)
+                .json({ error: "Refresh token invalid or revoked" });
+        }
+
+        const user = await userDB.getUserById({
+            user_id: decodedRefreshToken.user_id,
+        });
+        const newAccessToken = generateAccessToken(user);
+        const newRefreshToken = generateRefreshToken(user);
+
+        const refreshExpiryDate = calculateExpiryDate(
+            process.env.JWT_REFRESH_EXPIRY
+        );
+
+        const refreshTokenResults = await refreshTokenDB.updateRefreshToken(
+            refreshToken,
+            newRefreshToken,
+            refreshExpiryDate
+        );
+        if (!refreshTokenResults) {
+            return res.status(403).json({ error: "Failed to renew token" });
+        }
+
+        // Return new tokens
+        res.json({
+            user: {
+                user_id: user.user_id,
+                username: user.username,
+            },
+            accessToken: newAccessToken,
+            refreshToken: newRefreshToken,
+        });
+    } catch (error) {
+        console.log(`Error in path /refresh_access_token: ${error.message}`);
+        res.status(500).json({ error: "Refresh token renewal failed" });
     }
 });
