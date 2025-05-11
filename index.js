@@ -9,6 +9,8 @@ import { initDatabase } from "./db/init.js";
 import { studentsRoutes } from "./routes/studentsRoutes.js";
 import { authRoutes } from "./routes/authRoutes.js";
 import session from 'express-session';
+import { RedisStore } from "connect-redis";
+import { createClient } from "redis";
 
 const __dirname = dirname(fileURLToPath(import.meta.url)) + sep;
 const config = {
@@ -28,7 +30,18 @@ const limiter = rateLimit({
     message: { error: "Too many requests sent, please try again later" },
 });
 
+const redisClient = createClient({
+    url: process.env.REDIS_URL,
+});
+redisClient.on('error', (err) => {
+    console.log(`Redis Client Error`);
+});
+redisClient.on('connect', () => {
+    console.log(`Connected to Redis`);
+});
+
 app.use(session({
+    store: new RedisStore({client: redisClient}),
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
@@ -43,6 +56,7 @@ app.use(limiter);
 
 async function startServer() {
     try {
+        await redisClient.connect();
         await initDatabase();
         console.log(`Database initialized`);
     } catch (error) {
