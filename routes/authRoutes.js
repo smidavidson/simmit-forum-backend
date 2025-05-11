@@ -41,6 +41,11 @@ authRoutes.post("/login", async (req, res) => {
 
         // Attach user object to session
         req.session.user = userResults.user;
+        console.log("Session after setting user:", {
+            sessionID: req.sessionID,
+            user: req.session.user,
+            cookie: req.session.cookie,
+        });
         res.json({ user: userResults.user });
     } catch (error) {
         console.log(`Login error: ${error.message}`);

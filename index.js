@@ -8,7 +8,7 @@ import rateLimit from "express-rate-limit";
 import { initDatabase } from "./db/init.js";
 import { studentsRoutes } from "./routes/studentsRoutes.js";
 import { authRoutes } from "./routes/authRoutes.js";
-import session from 'express-session';
+import session from "express-session";
 import { RedisStore } from "connect-redis";
 import { createClient } from "redis";
 
@@ -33,23 +33,27 @@ const limiter = rateLimit({
 const redisClient = createClient({
     url: process.env.REDIS_URL,
 });
-redisClient.on('error', (err) => {
+redisClient.on("error", (err) => {
     console.log(`Redis Client Error`);
 });
-redisClient.on('connect', () => {
+redisClient.on("connect", () => {
     console.log(`Connected to Redis`);
 });
 
-app.use(session({
-    store: new RedisStore({client: redisClient}),
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 24 * 60 * 60 * 1000
-    }
-}))
+app.use(
+    session({
+        store: new RedisStore({ client: redisClient }),
+        secret: process.env.SESSION_SECRET,
+        resave: false,
+        saveUninitialized: false,
+        cookie: {
+            // secure: process.env.NODE_ENV === "production",
+            secure: false,
+            maxAge: 24 * 60 * 60 * 1000,
+        },
+    })
+);
+
 
 app.use(express.urlencoded({ extended: true }));
 app.use(limiter);
@@ -65,6 +69,16 @@ async function startServer() {
 }
 
 startServer();
+
+// Add session debugging middleware
+app.use((req, res, next) => {
+    console.log('Session middleware:', {
+        sessionID: req.sessionID,
+        hasSession: !!req.session,
+        hasUser: req.session?.user ? true : false
+    });
+    next();
+});
 
 app.use("/students", studentsRoutes);
 app.use("/auth", authRoutes);
