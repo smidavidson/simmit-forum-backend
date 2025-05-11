@@ -1,4 +1,3 @@
-import { errors } from "formidable";
 import pool from "../db/connect.js";
 import bcrypt from "bcrypt";
 
