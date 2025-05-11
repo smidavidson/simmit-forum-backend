@@ -40,23 +40,35 @@ redisClient.on("connect", () => {
     console.log(`Connected to Redis`);
 });
 
+const redisStore = new RedisStore({ client: redisClient });
+redisStore.on('connect', () => {
+    console.log('RedisStore connected');
+});
+redisStore.on('disconnect', () => {
+    console.log('RedisStore disconnected');
+});
+redisStore.on('error', (err) => {
+    console.log('RedisStore error:', err);
+});
+
 // Debug environment variables immediately after loading
-console.log('Initial environment check:', {
+console.log("Initial environment check:", {
     NODE_ENV: process.env.NODE_ENV,
     NODE_ENV_type: typeof process.env.NODE_ENV,
     NODE_ENV_length: process.env.NODE_ENV?.length,
-    comparison: process.env.NODE_ENV === "production"
+    comparison: process.env.NODE_ENV === "production",
 });
 
 app.use(
     session({
-        store: new RedisStore({ client: redisClient }),
+        store: redisStore,
         secret: process.env.SESSION_SECRET,
         resave: false,
         saveUninitialized: false,
         cookie: {
-            secure: process.env.NODE_ENV === "production",
-            // secure: true,
+            // secure: process.env.NODE_ENV === "production",
+            secure: true,
+            sameSite: "none",
             maxAge: 24 * 60 * 60 * 1000,
         },
     })
