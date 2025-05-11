@@ -4,8 +4,6 @@ async function initDatabase() {
     try {
         await initStudents();
         await initUsers();
-        await initUsersRoles();
-        await initRefresh();
     } catch (error) {
         console.log(`Failed to initDatabase(): ${error.message}`);
         throw error;
@@ -37,41 +35,7 @@ async function initUsers() {
             )`);
         return true;
     } catch (error) {
-        console.log(`Failed to initAuth(): ${error.message}`);
-        throw error;
-    }
-}
-
-async function initUsersRoles() {
-    try {
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS users_roles (
-                user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-                role TEXT NOT NULL DEFAULT 'user',
-                PRIMARY KEY (user_id, role)
-            )`);
-        return true;
-    } catch (error) {
-        console.log(`Failed to initUsersRoles(): ${error.message}`);
-        throw error;
-    }
-}
-
-async function initRefresh() {
-    try {
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS refresh_tokens (
-                token_id SERIAL PRIMARY KEY,
-                user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-                token TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                expires_at TIMESTAMP NOT NULL,
-                is_revoked BOOLEAN DEFAULT FALSE
-            )
-            `);
-            return true;
-    } catch (error) {
-        console.log(`Failed to initRefresh(): ${error.message}`);
+        console.log(`Failed to initUsers(): ${error.message}`);
         throw error;
     }
 }

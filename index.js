@@ -8,6 +8,7 @@ import rateLimit from "express-rate-limit";
 import { initDatabase } from "./db/init.js";
 import { studentsRoutes } from "./routes/studentsRoutes.js";
 import { authRoutes } from "./routes/authRoutes.js";
+import session from 'express-session';
 
 const __dirname = dirname(fileURLToPath(import.meta.url)) + sep;
 const config = {
@@ -26,6 +27,16 @@ const limiter = rateLimit({
     max: 1,
     message: { error: "Too many requests sent, please try again later" },
 });
+
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60 * 1000
+    }
+}))
 
 app.use(express.urlencoded({ extended: true }));
 app.use(limiter);
