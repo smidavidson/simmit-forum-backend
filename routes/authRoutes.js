@@ -39,13 +39,23 @@ authRoutes.post("/login", async (req, res) => {
             return res.status(401).json({ error: userResults.error });
         }
 
+        console.log('Login attempt:', {
+            userFound: !!userResults.user,
+            userData: userResults.user,
+            sessionID: req.sessionID,
+            sessionBefore: !!req.session,
+            sessionUserBefore: !!req.session?.user
+        });
+
         // Attach user object to session
         req.session.user = userResults.user;
-        console.log("Session after setting user:", {
+        console.log('Session after setting user:', {
             sessionID: req.sessionID,
-            user: req.session.user,
-            cookie: req.session.cookie,
+            sessionAfter: !!req.session,
+            sessionUserAfter: !!req.session?.user,
+            userData: req.session?.user
         });
+        
         res.json({ user: userResults.user });
     } catch (error) {
         console.log(`Login error: ${error.message}`);
@@ -64,6 +74,14 @@ authRoutes.get("/logout", (req, res) => {
 });
 
 authRoutes.get("/profile", (req, res) => {
+    console.log('Profile route access:', {
+        sessionID: req.sessionID,
+        hasSession: !!req.session,
+        sessionData: req.session,
+        hasUser: !!req.session?.user,
+        userData: req.session?.user
+    });
+
     // If no user in session object, then not authenticated
     if (!req.session.user) {
         return res.status(401).json({ error: "Not authenticated" });
