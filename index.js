@@ -40,6 +40,14 @@ redisClient.on("connect", () => {
     console.log(`Connected to Redis`);
 });
 
+// Debug environment variables immediately after loading
+console.log('Initial environment check:', {
+    NODE_ENV: process.env.NODE_ENV,
+    NODE_ENV_type: typeof process.env.NODE_ENV,
+    NODE_ENV_length: process.env.NODE_ENV?.length,
+    comparison: process.env.NODE_ENV === "production"
+});
+
 app.use(
     session({
         store: new RedisStore({ client: redisClient }),
@@ -47,8 +55,8 @@ app.use(
         resave: false,
         saveUninitialized: false,
         cookie: {
-            // secure: process.env.NODE_ENV === "production",
-            secure: true,
+            secure: process.env.NODE_ENV === "production",
+            // secure: true,
             maxAge: 24 * 60 * 60 * 1000,
         },
     })
