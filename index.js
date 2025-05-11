@@ -48,12 +48,11 @@ app.use(
         saveUninitialized: false,
         cookie: {
             // secure: process.env.NODE_ENV === "production",
-            secure: false,
+            secure: true,
             maxAge: 24 * 60 * 60 * 1000,
         },
     })
 );
-
 
 app.use(express.urlencoded({ extended: true }));
 app.use(limiter);
@@ -72,10 +71,10 @@ startServer();
 
 // Add session debugging middleware
 app.use((req, res, next) => {
-    console.log('Session middleware:', {
+    console.log("Session middleware:", {
         sessionID: req.sessionID,
         hasSession: !!req.session,
-        hasUser: req.session?.user ? true : false
+        hasUser: req.session?.user ? true : false,
     });
     next();
 });
