@@ -24,7 +24,7 @@ const config = {
 const app = express();
 
 const corsConfig = {
-    origin: [process.env.CORS_ORIGIN, 'http://localhost:8000'],
+    origin: [process.env.CORS_ORIGIN],
     // Allow for authorization HTTP headers and cookies to be sent
     credentials: true,
 }
