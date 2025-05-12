@@ -22,13 +22,13 @@ const config = {
 
 const app = express();
 
-const limiter = rateLimit({
-    legacyHeaders: false,
-    standardHeaders: true,
-    windowMs: 0.25 * 1000,
-    max: 1,
-    message: { error: "Too many requests sent, please try again later" },
-});
+const corsConfig = {
+    origin: [process.env.CORS_ORIGIN, 'http://localhost:8000'],
+    credentials: true,
+}
+
+app.use(cors(corsConfig));
+
 
 const redisClient = createClient({
     url: process.env.REDIS_URL,
@@ -66,16 +66,27 @@ app.use(
         resave: false,
         saveUninitialized: false,
         cookie: {
-            // secure: process.env.NODE_ENV === "production",
-            secure: true,
+            secure: process.env.NODE_ENV === "production",
+            // secure: true,
+            // Cookies are sent for all request (including cross-site requests)
+            // subdomains count as cross-site requests
             sameSite: "none",
             maxAge: 24 * 60 * 60 * 1000,
         },
     })
 );
 
-app.use(express.urlencoded({ extended: true }));
+const limiter = rateLimit({
+    legacyHeaders: false,
+    standardHeaders: true,
+    windowMs: 0.25 * 1000,
+    max: 1,
+    message: { error: "Too many requests sent, please try again later" },
+});
+
 app.use(limiter);
+
+app.use(express.urlencoded({ extended: true }));
 
 async function startServer() {
     try {
