@@ -11,6 +11,7 @@ import { authRoutes } from "./routes/authRoutes.js";
 import session from "express-session";
 import { RedisStore } from "connect-redis";
 import { createClient } from "redis";
+import cors from "cors";
 
 const __dirname = dirname(fileURLToPath(import.meta.url)) + sep;
 const config = {
@@ -24,6 +25,7 @@ const app = express();
 
 const corsConfig = {
     origin: [process.env.CORS_ORIGIN, 'http://localhost:8000'],
+    // Allow for authorization HTTP headers and cookies to be sent
     credentials: true,
 }
 
