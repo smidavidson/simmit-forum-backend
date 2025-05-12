@@ -23,6 +23,8 @@ const config = {
 
 const app = express();
 
+console.log(`CORS_ORIGIN: ${process.env.CORS_ORIGIN}`);
+
 const corsConfig = {
     origin: [process.env.CORS_ORIGIN],
     // Allow for authorization HTTP headers and cookies to be sent
