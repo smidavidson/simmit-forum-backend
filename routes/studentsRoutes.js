@@ -58,6 +58,6 @@ studentsRoutes.delete("/:student_id", isAuthenticated, async (req, res) => {
 
         res.json({message: "Student deleted successfully"});
     } catch (error) {
-        res.status(500).json({message: "Error deleting student with student_id: ${student_id}"});
+        res.status(500).json({message: `Error deleting student with student_id: ${student_id}`});
     }
 });

@@ -32,7 +32,7 @@ const corsConfig = {
 }
 
 app.use(cors(corsConfig));
-app.options('*', cors(corsConfig));
+app.options('/*', cors(corsConfig));
 
 
 const redisClient = createClient({
