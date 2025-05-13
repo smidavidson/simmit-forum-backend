@@ -23,6 +23,8 @@ const config = {
 
 const app = express();
 
+app.set('trust proxy', 1);
+
 console.log(`CORS_ORIGIN: ${process.env.CORS_ORIGIN}`);
 
 const corsConfig = {
