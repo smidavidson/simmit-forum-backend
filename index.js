@@ -32,6 +32,7 @@ const corsConfig = {
 }
 
 app.use(cors(corsConfig));
+app.options('*', cors(corsConfig));
 
 
 const redisClient = createClient({
@@ -83,7 +84,7 @@ app.use(
 const limiter = rateLimit({
     legacyHeaders: false,
     standardHeaders: true,
-    windowMs: 0.25 * 1000,
+    windowMs: 0.01 * 1000,
     max: 1,
     message: { error: "Too many requests sent, please try again later" },
 });
