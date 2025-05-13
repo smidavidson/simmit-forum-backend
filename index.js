@@ -72,7 +72,7 @@ app.use(
         saveUninitialized: false,
         cookie: {
             secure: process.env.NODE_ENV === "production",
-            domain: '.testytestsite.click',
+            // domain: '.testytestsite.click',
             // secure: true,
             // Cookies are sent for all request (including cross-site requests)
             // subdomains count as cross-site requests
