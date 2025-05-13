@@ -29,10 +29,10 @@ const corsConfig = {
     origin: [process.env.CORS_ORIGIN],
     // Allow for authorization HTTP headers and cookies to be sent
     credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204
 }
-
 app.use(cors(corsConfig));
-app.options('/*', cors(corsConfig));
 
 
 const redisClient = createClient({
