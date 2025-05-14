@@ -45,6 +45,7 @@ export const userStore = {
                 success: true,
                 user: {
                     username: user.username,
+                    user_id: user.user_id,
                 },
             };
         } catch (error) {
