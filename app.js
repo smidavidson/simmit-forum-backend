@@ -8,6 +8,7 @@ import rateLimit from "express-rate-limit";
 import { initDatabase } from "./db/init.js";
 import { studentsRoutes } from "./routes/studentsRoutes.js";
 import { authRoutes } from "./routes/authRoutes.js";
+import { s3Routes } from "./routes/s3Routes.js";
 import session from "express-session";
 import { RedisStore } from "connect-redis";
 import { createClient } from "redis";
@@ -23,12 +24,14 @@ const config = {
 
 const app = express();
 
-app.set('trust proxy', 1);
+if (process.env.NODE_ENV === "production") {
+    app.set('trust proxy', 1);
+}
 
-console.log(`CORS_ORIGIN: ${process.env.CORS_ORIGIN}`);
+console.log(`CORS_REQUEST_ORIGIN: ${process.env.CORS_REQUEST_ORIGIN}`);
 
 const corsConfig = {
-    origin: [process.env.CORS_ORIGIN],
+    origin: [process.env.CORS_REQUEST_ORIGIN],
     // Allow for authorization HTTP headers and cookies to be sent
     credentials: true,
 }
@@ -45,43 +48,30 @@ redisClient.on("connect", () => {
     console.log(`Connected to Redis`);
 });
 
-const redisStore = new RedisStore({ client: redisClient });
-redisStore.on('connect', () => {
-    console.log('RedisStore connected');
-});
-redisStore.on('disconnect', () => {
-    console.log('RedisStore disconnected');
-});
-redisStore.on('error', (err) => {
-    console.log('RedisStore error:', err);
-});
 
 // Debug environment variables immediately after loading
-console.log("Initial environment check:", {
+console.log("Initial node environment check:", {
     NODE_ENV: process.env.NODE_ENV,
-    NODE_ENV_type: typeof process.env.NODE_ENV,
-    NODE_ENV_length: process.env.NODE_ENV?.length,
-    comparison: process.env.NODE_ENV === "production",
+    is_in_production_mode: process.env.NODE_ENV === "production",
 });
 
 app.use(
     session({
-        store: redisStore,
-        secret: process.env.SESSION_SECRET,
+        store: new RedisStore({ client: redisClient }),
+        secret: process.env.REDIS_SESSION_SECRET,
         resave: false,
         saveUninitialized: false,
         cookie: {
-            secure: process.env.NODE_ENV === "production",
-            // domain: '.testytestsite.click',
-            // secure: true,
-            // Cookies are sent for all request (including cross-site requests)
-            // subdomains count as cross-site requests
-            sameSite: "none",
+            secure: false,
+            sameSite: "lax",
+            // secure: process.env.NODE_ENV === "production",
+            // sameSite: "none",
             maxAge: 24 * 60 * 60 * 1000,
         },
     })
 );
 
+// Limit requests
 const limiter = rateLimit({
     legacyHeaders: false,
     standardHeaders: true,
@@ -89,8 +79,7 @@ const limiter = rateLimit({
     max: 1,
     message: { error: "Too many requests sent, please try again later" },
 });
-
-app.use(limiter);
+// app.use(limiter);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -99,7 +88,7 @@ async function startServer() {
     try {
         await redisClient.connect();
         await initDatabase();
-        console.log(`Database initialized`);
+        console.log(`Server initialized`);
     } catch (error) {
         process.exit(1);
     }
@@ -109,16 +98,18 @@ startServer();
 
 // Add session debugging middleware
 app.use((req, res, next) => {
-    console.log("Session middleware:", {
-        sessionID: req.sessionID,
-        hasSession: !!req.session,
-        hasUser: req.session?.user ? true : false,
-    });
+    console.log(`\n\n!! Request to localhost:${process.env.PORT}${req.url} Received !!`);
+    // console.log("Session middleware:", {
+    //     sessionID: req.sessionID,
+    //     hasSession: !!req.session,
+    //     hasUser: req.session?.user ? true : false,
+    // });
     next();
 });
 
 app.use("/students", studentsRoutes);
 app.use("/auth", authRoutes);
+app.use("/s3", s3Routes);
 
 app.listen(config.port, () => {
     console.log(`Server is on at port ${config.port}`);

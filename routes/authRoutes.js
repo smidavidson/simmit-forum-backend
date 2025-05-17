@@ -4,6 +4,7 @@ import { userStore } from "../stores/userStore.js";
 export const authRoutes = Router();
 
 authRoutes.post("/register", async (req, res) => {
+    console.log('/auth/register request');
     try {
         const { username, password } = req.body;
         if (!username || !password) {
@@ -24,6 +25,7 @@ authRoutes.post("/register", async (req, res) => {
 });
 
 authRoutes.post("/login", async (req, res) => {
+        console.log('/auth/login request');
     try {
         const { username, password } = req.body;
 
@@ -64,6 +66,7 @@ authRoutes.post("/login", async (req, res) => {
 });
 
 authRoutes.get("/logout", (req, res) => {
+    console.log('/auth/logout request');
     // Destroy the current existing session from the session store
     req.session.destroy((err) => {
         if (err) {
@@ -74,13 +77,14 @@ authRoutes.get("/logout", (req, res) => {
 });
 
 authRoutes.get("/profile", (req, res) => {
-    console.log('Profile route access:', {
+    console.log('/auth/profile request:', {
         sessionID: req.sessionID,
         hasSession: !!req.session,
         sessionData: req.session,
         hasUser: !!req.session?.user,
         userData: req.session?.user
     });
+    console.log("");
 
     // If no user in session object, then not authenticated
     if (!req.session.user) {
@@ -88,13 +92,4 @@ authRoutes.get("/profile", (req, res) => {
     }
     // Otherwise just return the user object from the session
     res.json({ user: req.session.user });
-});
-
-// Debug route to inspect session data
-authRoutes.get("/debug-session", (req, res) => {
-    res.json({
-        sessionID: req.sessionID,
-        session: req.session,
-        cookie: req.session.cookie,
-    });
 });
