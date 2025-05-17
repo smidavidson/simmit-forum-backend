@@ -1,12 +1,23 @@
 // Handles /auth routing
 import { Router } from "express";
 import { userStore } from "../stores/userStore.js";
+import { isAuthenticated } from "../middleware/auth.js";
 export const authRoutes = Router();
+
+authRoutes.get("/me", isAuthenticated, async (req, res) => {
+    try {
+        const response = req.session.user;
+        return res.status(200).json({message: "true", data: response});
+    } catch (error) {
+        console.log(`/me authentication error: ${error.message}`);
+        res.status(500).json({ message: "Error checking user authentication" });
+    }
+})
 
 authRoutes.post("/register", async (req, res) => {
     console.log('/auth/register request');
     try {
-        const { username, password } = req.body;
+        const { username, password, email } = req.body;
         if (!username || !password) {
             return res
                 .status(400)
@@ -14,7 +25,7 @@ authRoutes.post("/register", async (req, res) => {
         }
 
         // Insert new user into user table
-        const userResults = await userStore.insertUser({ username, password });
+        const userResults = await userStore.insertUser({ username, password, email });
         res.status(201).json({
             user: userResults.user,
         });

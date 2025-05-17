@@ -2,14 +2,14 @@ import pool from "../db/connect.js";
 import bcrypt from "bcrypt";
 
 export const userStore = {
-    insertUser: async ({username, password}) => {
+    insertUser: async ({username, password, email}) => {
         try {
             const saltRounds = 10;
             const hashedPassword = await bcrypt.hash(password, saltRounds);
 
             const userResults = await pool.query(
-                `INSERT INTO users (username, password) VALUES ($1, $2) RETURNING username, user_id`,
-                [username, hashedPassword]
+                `INSERT INTO users (username, password, email) VALUES ($1, $2, $3) RETURNING username, user_id`,
+                [username, hashedPassword, email]
             );
             return {
                 success: true,
@@ -20,6 +20,8 @@ export const userStore = {
             throw error;
         }
     },
+
+
 
     verifyUser: async ({username, password}) => {
         try {
