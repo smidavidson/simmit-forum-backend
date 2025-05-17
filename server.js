@@ -13,6 +13,7 @@ import session from "express-session";
 import { RedisStore } from "connect-redis";
 import { createClient } from "redis";
 import cors from "cors";
+import { isAuthenticated } from "./middleware/auth.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url)) + sep;
 const config = {
@@ -109,7 +110,7 @@ app.use((req, res, next) => {
 
 app.use("/students", studentsRoutes);
 app.use("/auth", authRoutes);
-app.use("/s3", s3Routes);
+app.use("/s3", isAuthenticated, s3Routes);
 
 app.listen(config.port, () => {
     console.log(`Server is on at port ${config.port}`);

@@ -14,7 +14,7 @@ const s3Client = new S3Client({
     },
 });
 
-s3Routes.post("/upload_url", isAuthenticated, async (req, res) => {
+s3Routes.post("/upload_url", async (req, res) => {
     console.log(`/upload_url request made\n`);
     try {
         const {fileName, fileType} = req.body;
@@ -27,8 +27,11 @@ s3Routes.post("/upload_url", isAuthenticated, async (req, res) => {
             return res.status(400).json({ message: "Only image uploads are allowed" });
         }
 
+        const timestamp = Date.now().toString(); // milliseconds since epoch
+        const randomString = crypto.createHash('sha256').update(timestamp).digest('hex').slice(0, 12);
+
         // Define the resource URL that pre-signed will map to
-        const key = `${req.session.user.user_id}/${fileName}`
+        const key = `${req.session.user.user_id}/${randomString}-${fileName}`
 
         const command = new PutObjectCommand({
             Bucket: process.env.AWS_S3_BUCKET_NAME,

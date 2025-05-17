@@ -5,7 +5,7 @@ import { isAuthenticated } from "../middleware/auth.js";
 export const studentsRoutes = Router();
 
 // Returns all students
-studentsRoutes.get("/", isAuthenticated, async (req, res) => {
+studentsRoutes.get("/", async (req, res) => {
     try {
         const students = await studentsStore.getAllStudents();
         res.json(students);
@@ -33,7 +33,7 @@ studentsRoutes.get("/:student_id", async (req, res) => {
 });
 
 // Handle POST of new data
-studentsRoutes.post("/", isAuthenticated, async (req, res) => {
+studentsRoutes.post("/", async (req, res) => {
     try {
         const { name, age } = req.body;
         if (!name || !age) {
