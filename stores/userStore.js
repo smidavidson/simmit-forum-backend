@@ -21,17 +21,15 @@ export const userStore = {
         }
     },
 
-
-
-    verifyUser: async ({username, password}) => {
+    verifyUser: async ({email, password}) => {
         try {
             const userResults = await pool.query(
-                `SELECT * FROM users WHERE username =$1`,
-                [username]
+                `SELECT * FROM users WHERE email = $1`,
+                [email]
             );
 
             if (userResults.rows.length === 0) {
-                return { success: false, error: "Invalid username" };
+                return { success: false, message: "Invalid email" };
             }
 
             const user = userResults.rows[0];
@@ -41,7 +39,7 @@ export const userStore = {
                 user.password
             );
             if (!isPasswordMatch) {
-                return { success: false, error: "Invalid password" };
+                return { success: false, message: "Invalid password" };
             }
             return {
                 success: true,

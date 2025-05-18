@@ -6,11 +6,11 @@ export const authRoutes = Router();
 
 authRoutes.get("/me", isAuthenticated, async (req, res) => {
     try {
-        const response = req.session.user;
-        return res.status(200).json({message: "true", data: response});
+        const user = req.session.user;
+        return res.status(200).json({success: true, user});
     } catch (error) {
         console.log(`/me authentication error: ${error.message}`);
-        res.status(500).json({ message: "Error checking user authentication" });
+        res.status(500).json({ success: false, message: "Error checking user authentication" });
     }
 })
 
@@ -38,18 +38,18 @@ authRoutes.post("/register", async (req, res) => {
 authRoutes.post("/login", async (req, res) => {
         console.log('/auth/login request');
     try {
-        const { username, password } = req.body;
+        const { email, password } = req.body;
 
-        if (!username || !password) {
+        if (!email || !password) {
             return res
                 .status(400)
-                .json({ mesage: "Username and password required" });
+                .json({ success: false, message: "Email and password required" });
         }
 
         // Verify username and password match and retrieve user info
-        const userResults = await userStore.verifyUser({ username, password });
+        const userResults = await userStore.verifyUser({ email, password });
         if (!userResults.success) {
-            return res.status(401).json({ error: userResults.error });
+            return res.status(401).json({ success: false, message: userResults.message });
         }
 
         console.log('Login attempt:', {

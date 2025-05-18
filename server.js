@@ -14,6 +14,7 @@ import { RedisStore } from "connect-redis";
 import { createClient } from "redis";
 import cors from "cors";
 import { isAuthenticated } from "./middleware/auth.js";
+import { postsRoutes } from "./routes/postsRoutes.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url)) + sep;
 const config = {
@@ -26,7 +27,7 @@ const config = {
 const app = express();
 
 if (process.env.NODE_ENV === "production") {
-    app.set('trust proxy', 1);
+    app.set("trust proxy", 1);
 }
 
 console.log(`CORS_REQUEST_ORIGIN: ${process.env.CORS_REQUEST_ORIGIN}`);
@@ -35,9 +36,8 @@ const corsConfig = {
     origin: [process.env.CORS_REQUEST_ORIGIN],
     // Allow for authorization HTTP headers and cookies to be sent
     credentials: true,
-}
+};
 app.use(cors(corsConfig));
-
 
 const redisClient = createClient({
     url: process.env.REDIS_URL,
@@ -48,7 +48,6 @@ redisClient.on("error", (err) => {
 redisClient.on("connect", () => {
     console.log(`Connected to Redis`);
 });
-
 
 // Debug environment variables immediately after loading
 console.log("Initial node environment check:", {
@@ -99,7 +98,9 @@ startServer();
 
 // Add session debugging middleware
 app.use((req, res, next) => {
-    console.log(`\n\n!! Request to localhost:${process.env.PORT}${req.url} Received !!`);
+    console.log(
+        `\n\n!! Request to localhost:${process.env.PORT}${req.url} Received !!`
+    );
     // console.log("Session middleware:", {
     //     sessionID: req.sessionID,
     //     hasSession: !!req.session,
@@ -110,6 +111,7 @@ app.use((req, res, next) => {
 
 app.use("/students", studentsRoutes);
 app.use("/auth", authRoutes);
+app.use("/posts", postsRoutes);
 app.use("/s3", isAuthenticated, s3Routes);
 
 app.listen(config.port, () => {

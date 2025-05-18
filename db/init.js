@@ -40,10 +40,9 @@ async function initUsers() {
         
         const res = await pool.query(`SELECT COUNT(*) FROM users`);
         if (Number(res.rows[0].count) === 0) {
-            console.log("WHAT???");
             await pool.query(`
                 INSERT INTO users (email, username, password) VALUES
-                ('test@example.com', 'admin', '$2b$10$2EsoP8iMu8tHs75eZRGk8.3QAOAhPVDN2w6wWsZcjULoiXLMtaLh.')
+                ('test@test.com', 'admin', '$2b$10$2EsoP8iMu8tHs75eZRGk8.3QAOAhPVDN2w6wWsZcjULoiXLMtaLh.')
             `);
         }
 
@@ -61,12 +60,13 @@ async function initPosts() {
                 post_id SERIAL PRIMARY KEY,
                 created_by INT NOT NULL,
                 created_at TIMESTAMP DEFAULT NOW(),
-                title TEXT NOT NULL,
-                content TEXT NOT NULL,
+                title TEXT,
+                content TEXT,
                 link_url TEXT,
                 comment_count INT DEFAULT 0,
                 image_url TEXT,
-                flair INT NOT NULL,
+                image_key TEXT,
+                flair INT,
                 is_deleted BOOLEAN DEFAULT FALSE,
                 like_count INT DEFAULT 0,
                 FOREIGN KEY (created_by) REFERENCES users(user_id),

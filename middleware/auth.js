@@ -12,5 +12,5 @@ export const isAuthenticated = async (req, res, next) => {
         return next();
     }
     console.log("User was not authorized");
-    return res.status(401).json({message: "Not authenticated"});
+    return res.status(401).json({success: false, message: "Not authenticated"});
 }
