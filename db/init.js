@@ -112,9 +112,12 @@ async function initFlairs() {
         if (Number(res.rows[0].count) === 0) {
             await pool.query(`
                 INSERT INTO flairs (color, name) VALUES
-                ('#808b96', 'general'),
                 ('#8B008B', 'gaming'),
-                ('#DC143C', 'advice')
+                ('#DC143C', 'advice'),
+                ('#1E90FF', 'news'),
+                ('#006400', 'food'),
+                ('#FF4500', 'sports'),
+                ('#808b96', 'general')
             `);
         }
         return true;

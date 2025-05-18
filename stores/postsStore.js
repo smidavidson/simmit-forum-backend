@@ -4,20 +4,6 @@ export const postsStore = {
     // Create post
     insertPost: async ({ postData, userId }) => {
         try {
-            const query = `
-                INSERT INTO posts (
-                    title,
-                    content,
-                    link_url,
-                    created_by,
-                    image_url,
-                    image_key,
-                    flair
-                )
-                VALUES ($1, $2, $3, $4, $5, $6)
-                RETURNING *
-            `;
-
             const values = [
                 postData.title,
                 postData.content,
@@ -28,19 +14,33 @@ export const postsStore = {
                 postData.flair,
             ];
 
-            const postsResult = await pool.query(query, values);
+            const postsResults = await pool.query(
+                `
+                INSERT INTO posts (
+                    title,
+                    content,
+                    link_url,
+                    created_by,
+                    image_url,
+                    image_key,
+                    flair
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
+                RETURNING *`,
+                values
+            );
 
-            if (postsResult.rows.length === 0) {
+            if (postsResults.rows.length === 0) {
                 throw new Error("Failed to create post");
             }
 
-            const postWithDetails = await postsStore.getPosts(
-                result.rows[0].post_id
-            );
+            const postWithDetails = await postsStore.getPost({
+                postId: postsResults.rows[0].post_id,
+            });
 
             return postWithDetails;
         } catch (error) {
-            console.log(`Error in submitPost(): ${error.message}`);
+            console.log(`Error in postStore.js/insertPost(): ${error.message}`);
             throw error;
         }
     },
@@ -105,7 +105,8 @@ export const postsStore = {
                 image_url: row.image_url,
                 created_at: row.created_at,
                 created_by: row.created_by,
-                created_by_username: row.username,
+                username: row.username,
+                comment_count: row.comment_count,
                 is_deleted: row.is_deleted,
                 flairs: {
                     name: row.flair_name,
@@ -114,8 +115,8 @@ export const postsStore = {
             }));
 
             const count =
-                result.rows.length > 0
-                    ? parseInt(result.rows[0].total_count)
+                postsResults.rows.length > 0
+                    ? parseInt(postsResults.rows[0].total_count)
                     : 0;
 
             return { posts, count };
@@ -168,7 +169,7 @@ export const postsStore = {
                 },
             };
         } catch (error) {
-            console.error(`Error in getPost():`, postId);
+            console.error(`Error in postsStore.js/getPost():`, postId);
             throw error;
         }
     },

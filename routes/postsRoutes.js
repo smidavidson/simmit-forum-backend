@@ -28,14 +28,32 @@ postsRoutes.get("/", async (req, res) => {
 
         res.json(posts);
     } catch (error) {
-        console.log(`GET posts error: ${error.message}`);
+        console.log(`Error in GET postsRoutes.js /: ${error.message}`);
         res.status(500).json({ message: "Failed to fetch posts" });
+    }
+});
+
+postsRoutes.get("/:id", async (req, res) => {
+    try {
+        const postId = req.params.id;
+        const post = await postsStore.getPost({postId});
+
+        res.json(post);
+    } catch (error) {
+        console.log(`Error in GET postsRoutes.js /:id: ${error.message}`);
+
+        if (error.message === "Post not found") {
+            return res.status(404).json({ message: "Post not found" });
+        }
+
+        res.status(500).json({ message: `Failed to fetch post ${postId}` });
     }
 });
 
 // Create a new post
 postsRoutes.post("/", isAuthenticated, async (req, res) => {
     try {
+        console.log("req body: ", req.body);
         const { title, content, link_url, image_url, image_key, flair } =
             req.body;
 
@@ -45,11 +63,11 @@ postsRoutes.post("/", isAuthenticated, async (req, res) => {
                 .json({ message: "Title, content and flair are required" });
         }
 
-        const userId = req.session.user.userId;
+        const userId = req.session.user.user_id;
         console.log("UserID: ", userId);
 
-        const post = await postsStore.insertPost(
-            {
+        const post = await postsStore.insertPost({
+            postData: {
                 title,
                 content,
                 link_url,
@@ -57,12 +75,12 @@ postsRoutes.post("/", isAuthenticated, async (req, res) => {
                 image_key,
                 flair,
             },
-            userId
-        );
+            userId,
+        });
 
         res.json(post);
     } catch (error) {
-        console.log(`POST posts error: ${error.message}`);
-        res.status(500).json({ message: "Failed to insert posts" });
+        console.log(`Error in POST postsRoutes.js /: ${error.message}`);
+        res.status(500).json({ message: "Failed to insert to posts" });
     }
 });
