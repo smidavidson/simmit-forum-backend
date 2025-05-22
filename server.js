@@ -15,6 +15,7 @@ import { createClient } from "redis";
 import cors from "cors";
 import { isAuthenticated } from "./middleware/auth.js";
 import { postsRoutes } from "./routes/postsRoutes.js";
+import { commentsRoutes } from "./routes/commentsRoutes.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url)) + sep;
 const config = {
@@ -112,6 +113,7 @@ app.use((req, res, next) => {
 app.use("/students", studentsRoutes);
 app.use("/auth", authRoutes);
 app.use("/posts", postsRoutes);
+app.use("/comments", commentsRoutes);
 app.use("/s3", isAuthenticated, s3Routes);
 
 app.listen(config.port, () => {

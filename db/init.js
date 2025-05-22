@@ -7,6 +7,7 @@ async function initDatabase() {
         await initFlairs();
         await initPosts();
         await initComments();
+        await initCommentCountTrigger();
     } catch (error) {
         console.log(`Failed to initDatabase(): ${error.message}`);
         throw error;
@@ -86,6 +87,7 @@ async function initComments() {
                 comment_id SERIAL PRIMARY KEY,
                 created_at TIMESTAMP DEFAULT NOW(),
                 created_by INT,
+                is_deleted BOOLEAN DEFAULT FALSE,
                 post_id INT NOT NULL,
                 content TEXT,
                 FOREIGN KEY (created_by) REFERENCES users(user_id),
@@ -123,6 +125,56 @@ async function initFlairs() {
         return true;
     } catch (error) {
         console.log(`Failed to initFlairs(): ${error.message}`);
+        throw error;
+    }
+}
+
+async function initCommentCountTrigger() {
+    try {
+        await pool.query(`
+            CREATE OR REPLACE FUNCTION update_post_comment_count()
+            RETURNS TRIGGER AS $$ 
+            BEGIN
+                IF TG_OP = 'INSERT' THEN
+                    UPDATE posts
+                    SET comment_count = comment_count + 1
+                    WHERE post_id = NEW.post_id;
+                    RETURN NEW;
+                END IF;
+
+                IF TG_OP = 'UPDATE' THEN
+                    IF OLD.is_deleted = false AND NEW.is_deleted = true THEN
+                        UPDATE posts 
+                        SET comment_count = comment_count - 1
+                        WHERE post_id = NEW.post_id;
+                        END IF;
+                        RETURN NEW;
+                END IF;
+
+                RETURN NULL;
+            END;
+            $$ LANGUAGE plpgsql;
+        `);
+
+        await pool.query(`
+            DROP TRIGGER IF EXISTS comment_count_insert_trigger ON comments;
+            CREATE TRIGGER comment_count_insert_trigger
+                AFTER INSERT ON comments
+                FOR EACH ROW
+                EXECUTE FUNCTION update_post_comment_count();
+        `);
+
+        await pool.query(`
+            DROP TRIGGER IF EXISTS comment_count_update_trigger ON comments;
+            CREATE TRIGGER comment_count_update_trigger
+                AFTER UPDATE ON comments
+                FOR EACH ROW
+                EXECUTE FUNCTION update_post_comment_count();
+        `)
+
+
+    } catch (error) {
+        console.log(`Failed to initCommentCountTrigger(): ${error.message}`);
         throw error;
     }
 }

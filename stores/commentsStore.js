@@ -47,7 +47,7 @@ export const commentsStore = {
                         u.username
                     FROM
                         comments c
-                    JOIN
+                    LEFT JOIN
                         users u ON c.created_by = u.user_id
                     WHERE 
                         c.post_id = $1
@@ -60,12 +60,13 @@ export const commentsStore = {
             );
 
             const comments = commentsResults.rows.map((comment) => ({
-                id: row.comment_id,
-                content: row.content,
-                created_at: row.created_at,
-                created_by: row.created_by,
-                post_id: row.post_id,
-                username: row.username,
+                id: comment.comment_id,
+                content: comment.content,
+                created_at: comment.created_at,
+                created_by: comment.created_by,
+                is_deleted: comment.is_deleted,
+                post_id: comment.post_id,
+                username: comment.username,
             }));
 
             return comments;
@@ -97,14 +98,14 @@ export const commentsStore = {
                 [username]
             );
 
-            const comments = commentsResults.map((row) => ({
-                id: row.comment_id,
-                content: row.content,
-                created_at: row.created_at,
-                created_by: row.created_by,
-                username: row.username,              
+            const comments = commentsResults.rows.map((comment) => ({
+                id: comment.comment_id,
+                content: comment.content,
+                created_at: comment.created_at,
+                created_by: comment.created_by,
+                username: comment.username,              
             }));
-            
+
             return comments;
         } catch (error) {
             console.error(
@@ -146,8 +147,12 @@ export const commentsStore = {
 
             const deleteCommentResults = await pool.query(
                 `
-                DELETE FROM 
+                UPDATE 
                     comments
+                SET
+                    content = NULL, 
+                    created_by = NULL,
+                    is_deleted = true
                 WHERE
                     comment_id = $1
                 RETURNING comment_id
@@ -156,7 +161,7 @@ export const commentsStore = {
             );
 
             return {
-                comment_id: deleteCommentResults.rows[0].commentId,
+                comment_id: deleteCommentResults.rows[0].comment_id,
                 success: true,
             };
         } catch (error) {
