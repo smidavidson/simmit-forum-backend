@@ -276,6 +276,8 @@ export const postsStore = {
                     p.is_deleted = false
             `;
 
+            const queryParams = [username];
+
             query =
                 query +
                 ` ORDER BY p.${sortBy.field} ${

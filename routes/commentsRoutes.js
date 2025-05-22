@@ -26,25 +26,6 @@ commentsRoutes.get("/post/:postId", async (req, res) => {
     }
 });
 
-commentsRoutes.get("/user/:username", async (req, res) => {
-    try {
-        const { username } = req.params;
-
-        const comments = await commentsStore.getCommentsByUsername({
-            username,
-        });
-
-        res.json(comments);
-    } catch (error) {
-        console.log(
-            `Error in GET postsRoutes.js /user/:username: ${error.message}`
-        );
-        res.status(500).json({
-            message: `Failed to fetch comments for user: ${username}`,
-        });
-    }
-});
-
 commentsRoutes.post("/", isAuthenticated, async (req, res) => {
     try {
         const { content, postId } = req.body;
@@ -74,22 +55,48 @@ commentsRoutes.post("/", isAuthenticated, async (req, res) => {
     }
 });
 
-commentsRoutes.delete('/:commentId', isAuthenticated, async (req, res) => {
+commentsRoutes.delete("/:commentId", isAuthenticated, async (req, res) => {
     try {
         const commentId = req.params.commentId;
         const userId = req.session.user.user_id;
 
-        const deletedCommentId = await commentsStore.deleteComment({commentId, userId});
+        const deletedCommentId = await commentsStore.deleteComment({
+            commentId,
+            userId,
+        });
 
-        res.json({id: deletedCommentId});
+        res.json({ id: deletedCommentId });
     } catch (error) {
-        console.log(`Error in DELETE postsRoutes.js /comments: ${error.message}`);
+        console.log(
+            `Error in DELETE postsRoutes.js /comments: ${error.message}`
+        );
         if (error.message === "Comment not found") {
-            return res.status(404).json({message: error.message});
+            return res.status(404).json({ message: error.message });
         } else if (error.message.includes("permission")) {
-            return res.status(403).json({message: error.message});
+            return res.status(403).json({ message: error.message });
         }
 
-        res.status(500).json({message: "Error deleting comment"});
+        res.status(500).json({ message: "Error deleting comment" });
     }
-})
+});
+
+commentsRoutes.get("/user/:username", async (req, res) => {
+    try {
+        const { username } = req.params;
+        const { sortBy, page, pageSize } = req.query;
+
+        const sortOptions = sortBy ? JSON.parse(sortBy) : undefined;
+
+        const result = await commentsStore.getCommentsByUsername({
+            username,
+            sortBy: sortOptions,
+            page: page ? parseInt(page) : undefined,
+            pageSize: pageSize ? parseInt(pageSize) : 10,
+        });
+
+        res.json(result);
+    } catch (error) {
+        console.log(`Error in GET /comments/user/:username: ${error.message}`);
+        res.status(500).json({ message: "Error fetching user comments" });
+    }
+});

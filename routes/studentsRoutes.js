@@ -67,24 +67,3 @@ studentsRoutes.delete("/:student_id", isAuthenticated, async (req, res) => {
         });
     }
 });
-
-commentsRoutes.get('/user/:username', async (req, res) => {
-    try {
-        const { username } = req.params;
-        const { sortBy, page, pageSize } = req.query;
-        
-        const sortOptions = sortBy ? JSON.parse(sortBy) : undefined;
-        
-        const result = await commentsStore.getCommentsByUsername({
-            username,
-            sortBy: sortOptions,
-            page: page ? parseInt(page) : undefined,
-            pageSize: pageSize ? parseInt(pageSize) : 10,
-        });
-
-        res.json(result);
-    } catch (error) {
-        console.log(`Error in GET /comments/user/:username: ${error.message}`);
-        res.status(500).json({ message: "Error fetching user comments" });
-    }
-});

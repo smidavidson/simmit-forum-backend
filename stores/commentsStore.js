@@ -79,7 +79,12 @@ export const commentsStore = {
         }
     },
 
-    getCommentsByUsername: async ({ username }) => {
+    getCommentsByUsername: async ({
+        username,
+        sortBy = { field: "created_at", direction: "desc" },
+        page,
+        pageSize = 10,
+    }) => {
         try {
             let query = `
                 SELECT 
@@ -98,17 +103,21 @@ export const commentsStore = {
 
             const queryParams = [username];
 
-            query = query + ` ORDER BY c.${sortBy.field} ${
-                sortBy.direction === "asc" ? "ASC" : "DESC"
-            }`;
+            query =
+                query +
+                ` ORDER BY c.${sortBy.field} ${
+                    sortBy.direction === "asc" ? "ASC" : "DESC"
+                }`;
 
             if (page && pageSize) {
                 const offset = (page - 1) * pageSize;
                 queryParams.push(pageSize);
                 queryParams.push(offset);
-                query = query + ` LIMIT $${queryParams.length - 1} OFFSET $${
-                    queryParams.length
-                }`;
+                query =
+                    query +
+                    ` LIMIT $${queryParams.length - 1} OFFSET $${
+                        queryParams.length
+                    }`;
             }
 
             const commentsResults = await pool.query(query, queryParams);
