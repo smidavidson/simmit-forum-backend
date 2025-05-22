@@ -272,7 +272,8 @@ export const postsStore = {
                     flairs f ON p.flair = f.flair_id
                 WHERE
                     u.username = $1
-                    AND p.is_deleted = false
+                    AND 
+                    p.is_deleted = false
             `;
 
             query =

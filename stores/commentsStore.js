@@ -81,32 +81,54 @@ export const commentsStore = {
 
     getCommentsByUsername: async ({ username }) => {
         try {
-            const commentsResults = await pool.query(
-                `
+            let query = `
                 SELECT 
                     c.*,
-                    u.username
+                    u.username,
+                    COUNT(*) OVER() as total_count
                 FROM 
                     comments c
                 JOIN 
                     users u ON c.created_by = u.user_id
                 WHERE 
                     u.username = $1
-                ORDER BY
-                    c.created_at DESC
-                `,
-                [username]
-            );
+                    AND 
+                    c.is_deleted = false
+            `;
 
-            const comments = commentsResults.rows.map((comment) => ({
+            const queryParams = [username];
+
+            query = query + ` ORDER BY c.${sortBy.field} ${
+                sortBy.direction === "asc" ? "ASC" : "DESC"
+            }`;
+
+            if (page && pageSize) {
+                const offset = (page - 1) * pageSize;
+                queryParams.push(pageSize);
+                queryParams.push(offset);
+                query = query + ` LIMIT $${queryParams.length - 1} OFFSET $${
+                    queryParams.length
+                }`;
+            }
+
+            const commentsResults = await pool.query(query, queryParams);
+
+            const userComments = commentsResults.rows.map((comment) => ({
                 id: comment.comment_id,
                 content: comment.content,
                 created_at: comment.created_at,
                 created_by: comment.created_by,
-                username: comment.username,              
+                is_deleted: comment.is_deleted,
+                post_id: comment.post_id,
+                username: comment.username,
             }));
 
-            return comments;
+            const count =
+                commentsResults.rows.length > 0
+                    ? parseInt(commentsResults.rows[0].total_count)
+                    : 0;
+
+            return { userComments, count };
         } catch (error) {
             console.error(
                 `Error in getCommentsByUsername() username: ${username}`,
