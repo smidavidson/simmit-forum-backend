@@ -1,4 +1,3 @@
-import { Result } from "pg";
 import pool from "../db/connect.js";
 
 export const commentsStore = {
@@ -73,6 +72,43 @@ export const commentsStore = {
         } catch (error) {
             console.error(
                 `Error in getCommentsFromPostId() fetching post ${postId}:`,
+                error.message
+            );
+            throw error;
+        }
+    },
+
+    getCommentsByUsername: async ({ username }) => {
+        try {
+            const commentsResults = await pool.query(
+                `
+                SELECT 
+                    c.*,
+                    u.username
+                FROM 
+                    comments c
+                JOIN 
+                    users u ON c.created_by = u.user_id
+                WHERE 
+                    u.username = $1
+                ORDER BY
+                    c.created_at DESC
+                `,
+                [username]
+            );
+
+            const comments = commentsResults.map((row) => ({
+                id: row.comment_id,
+                content: row.content,
+                created_at: row.created_at,
+                created_by: row.created_by,
+                username: row.username,              
+            }));
+            
+            return comments;
+        } catch (error) {
+            console.error(
+                `Error in getCommentsByUsername() username: ${username}`,
                 error.message
             );
             throw error;
