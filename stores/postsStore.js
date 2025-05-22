@@ -193,7 +193,11 @@ export const postsStore = {
             console.log("Post created by userId: ", post.created_by);
 
             if (post.created_by !== userId) {
-                console.log(`Permission check failed: post.created_by=${post.created_by} (${typeof post.created_by}), userId=${userId} (${typeof userId})`);
+                console.log(
+                    `Permission check failed: post.created_by=${
+                        post.created_by
+                    } (${typeof post.created_by}), userId=${userId} (${typeof userId})`
+                );
 
                 throw new Error(
                     "You do not have permission to delete this post"
@@ -242,6 +246,79 @@ export const postsStore = {
                 `Error in postsStore.js/deletePost() post id: ${postId}:`,
                 error.message
             );
+            throw error;
+        }
+    },
+
+    getPostsByUsername: async ({
+        username,
+        sortBy = { field: "created_at", direction: "desc" },
+        page,
+        pageSize = 10,
+    }) => {
+        try {
+            let query = `
+                SELECT 
+                    p.*,
+                    u.username,
+                    f.name as flair_name,
+                    f.color as flair_color,
+                    COUNT(*) OVER() as total_count
+                FROM 
+                    posts p
+                LEFT JOIN 
+                    users u ON p.created_by = u.user_id
+                LEFT JOIN
+                    flairs f ON p.flair = f.flair_id
+                WHERE
+                    u.username = $1
+                    AND p.is_deleted = false
+            `;
+
+            query =
+                query +
+                ` ORDER BY p.${sortBy.field} ${
+                    sortBy.direction === "asc" ? "ASC" : "DESC"
+                }`;
+
+            if (page && pageSize) {
+                const offset = (page - 1) * pageSize;
+                queryParams.push(pageSize);
+                queryParams.push(offset);
+                query =
+                    query +
+                    ` LIMIT $${queryParams.length - 1} OFFSET $${
+                        queryParams.length
+                    }`;
+            }
+
+            const postsResults = await pool.query(query, queryParams);
+
+            const userPosts = postsResults.rows.map((post) => ({
+                id: post.post_id,
+                title: post.title,
+                content: post.content,
+                link_url: post.link_url,
+                image_url: post.image_url,
+                created_at: post.created_at,
+                created_by: post.created_by,
+                username: post.username,
+                comment_count: post.comment_count,
+                is_deleted: post.is_deleted,
+                flairs: {
+                    name: post.flair_name,
+                    color: post.flair_color,
+                },
+            }));
+
+            const count =
+                postsResults.rows.length > 0
+                    ? parseInt(postsResults.rows[0].total_count)
+                    : 0;
+
+            return { userPosts, count };
+        } catch (error) {
+            console.error(`Error in getPostsByUsername():`, error.message);
             throw error;
         }
     },
