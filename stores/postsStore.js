@@ -1,4 +1,6 @@
+import { DeleteObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import pool from "../db/connect.js";
+import { deleteFileFromS3 } from "../routes/s3Routes.js";
 
 export const postsStore = {
     // Create post
@@ -137,9 +139,9 @@ export const postsStore = {
                     f.color as flair_color
                 FROM 
                     posts p
-                JOIN 
+                LEFT JOIN 
                     users u ON p.created_by = u.user_id
-                JOIN 
+                LEFT JOIN 
                     flairs f ON p.flair = f.flair_id
                 WHERE 
                     p.post_id = $1
@@ -187,13 +189,36 @@ export const postsStore = {
                 throw new Error("Post not found");
             }
 
-            if (postId.created_by !== userId) {
+            const post = postsResults.rows[0];
+            console.log("Post created by userId: ", post.created_by);
+
+            if (post.created_by !== userId) {
+                console.log(`Permission check failed: post.created_by=${post.created_by} (${typeof post.created_by}), userId=${userId} (${typeof userId})`);
+
                 throw new Error(
                     "You do not have permission to delete this post"
                 );
             }
 
-            // TODO: Delete image from bucket
+            // Delete image from bucket if it exists
+            if (post.image_key) {
+                try {
+                    const deleted = await deleteFileFromS3(post.image_key);
+                    if (deleted) {
+                        console.log(
+                            `Successfully deleted image with key: ${post.image_key}`
+                        );
+                    } else {
+                        console.log(
+                            `Failed to delete image with key: ${post.image_key}, continuing with post deletion`
+                        );
+                    }
+                } catch (error) {
+                    console.log(
+                        `Failed to delete image from S3: ${error.message}`
+                    );
+                }
+            }
 
             // Update the post as deleted
             const updateResult = await pool.query(
@@ -214,7 +239,7 @@ export const postsStore = {
             return updateResult.rows[0].post_id;
         } catch (error) {
             console.error(
-                `Error to deletePost() post id: ${postId}:`,
+                `Error in postsStore.js/deletePost() post id: ${postId}:`,
                 error.message
             );
             throw error;

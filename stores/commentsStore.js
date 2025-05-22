@@ -72,7 +72,7 @@ export const commentsStore = {
             return comments;
         } catch (error) {
             console.error(
-                `Error in getCommentsFromPostId() fetching post ${postId}:`,
+                `Error in getComments() fetching post ${postId}:`,
                 error.message
             );
             throw error;

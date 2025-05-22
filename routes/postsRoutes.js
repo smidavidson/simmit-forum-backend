@@ -84,3 +84,23 @@ postsRoutes.post("/", isAuthenticated, async (req, res) => {
         res.status(500).json({ message: "Failed to insert to posts" });
     }
 });
+
+postsRoutes.delete('/:postId', isAuthenticated, async (req, res) => {
+    try {
+        const postId = req.params.postId;
+        const userId = req.session.user.user_id;
+
+        const deletedPostId = await postsStore.deletePost({postId, userId});
+
+        res.json({post_id: deletedPostId});
+    } catch (error) {
+        console.log(`Error in DELETE postsRoutes.js /posts: ${error.message}`);
+        if (error.message === "Post not found") {
+            return res.status(404).json({message: error.message});
+        } else if (error.message.includes("permissions")) {
+            return res.status(403).json({message: error.message});
+        }
+
+        res.status(500).json({ message: "Failed to delete post" });
+    }
+})

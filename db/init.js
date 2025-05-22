@@ -59,7 +59,7 @@ async function initPosts() {
         await pool.query(`
             CREATE TABLE IF NOT EXISTS posts (
                 post_id SERIAL PRIMARY KEY,
-                created_by INT NOT NULL,
+                created_by INT,
                 created_at TIMESTAMP DEFAULT NOW(),
                 title TEXT,
                 content TEXT,
