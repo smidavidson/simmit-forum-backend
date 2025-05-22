@@ -36,7 +36,7 @@ postsRoutes.get("/", async (req, res) => {
 postsRoutes.get("/:id", async (req, res) => {
     try {
         const postId = req.params.id;
-        const post = await postsStore.getPost({postId});
+        const post = await postsStore.getPost({ postId });
 
         res.json(post);
     } catch (error) {
@@ -85,22 +85,43 @@ postsRoutes.post("/", isAuthenticated, async (req, res) => {
     }
 });
 
-postsRoutes.delete('/:postId', isAuthenticated, async (req, res) => {
+postsRoutes.delete("/:postId", isAuthenticated, async (req, res) => {
     try {
         const postId = req.params.postId;
         const userId = req.session.user.user_id;
 
-        const deletedPostId = await postsStore.deletePost({postId, userId});
+        const deletedPostId = await postsStore.deletePost({ postId, userId });
 
-        res.json({post_id: deletedPostId});
+        res.json({ post_id: deletedPostId });
     } catch (error) {
         console.log(`Error in DELETE postsRoutes.js /posts: ${error.message}`);
         if (error.message === "Post not found") {
-            return res.status(404).json({message: error.message});
+            return res.status(404).json({ message: error.message });
         } else if (error.message.includes("permissions")) {
-            return res.status(403).json({message: error.message});
+            return res.status(403).json({ message: error.message });
         }
 
         res.status(500).json({ message: "Failed to delete post" });
     }
-})
+});
+
+postsRoutes.get("/user/:username", async (req, res) => {
+    try {
+        const { username } = req.params;
+        const { sortBy, page, pageSize } = req.query;
+
+        const sortOptions = sortBy ? JSON.parse(sortBy) : undefined;
+
+        const result = await postsStore.getPostsByUsername({
+            username,
+            sortBy: sortOptions,
+            page: page ? parseInt(page) : undefined,
+            pageSize: pageSize ? parseInt(pageSize) : 10,
+        });
+
+        res.json(result);
+    } catch (error) {
+        console.log(`Error in GET /posts/user/:username: ${error.message}`);
+        res.status(500).json({ message: "Error fetching user posts" });
+    }
+});
