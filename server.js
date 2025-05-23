@@ -63,10 +63,8 @@ app.use(
         resave: false,
         saveUninitialized: false,
         cookie: {
-            secure: false,
-            sameSite: "lax",
-            // secure: process.env.NODE_ENV === "production",
-            // sameSite: "none",
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
             maxAge: 24 * 60 * 60 * 1000,
         },
     })
@@ -99,9 +97,7 @@ startServer();
 
 // Add session debugging middleware
 app.use((req, res, next) => {
-    console.log(
-        `\n\n!! Request to ${req.method} at ${req.url} received !!`
-    );
+    console.log(`\n\n!! Request to ${req.method} at ${req.url} received !!`);
     // console.log("Session middleware:", {
     //     sessionID: req.sessionID,
     //     hasSession: !!req.session,
