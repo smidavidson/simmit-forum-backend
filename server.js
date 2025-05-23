@@ -101,7 +101,7 @@ startServer();
 // Add session debugging middleware
 app.use((req, res, next) => {
     console.log(
-        `\n\n!! Request to /${req.url} Received !!`
+        `\n\n!! Request to ${req.url} Received !!`
     );
     // console.log("Session middleware:", {
     //     sessionID: req.sessionID,
