@@ -35,7 +35,7 @@ if (process.env.NODE_ENV === "production") {
 console.log(`CORS_REQUEST_ORIGIN: ${process.env.CORS_REQUEST_ORIGIN}`);
 
 const corsConfig = {
-    origin: [process.env.CORS_REQUEST_ORIGIN],
+    origin: process.env.CORS_REQUEST_ORIGIN,
     // Allow for authorization HTTP headers and cookies to be sent
     credentials: true,
 };
