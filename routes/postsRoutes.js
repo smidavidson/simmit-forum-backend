@@ -12,10 +12,11 @@ postsRoutes.get("/", async (req, res) => {
             sort_direction = "desc",
             page = 1,
             filter,
+            page_size,
         } = req.query;
 
-        const PAGE_SIZE = 9;
-
+        const PAGE_SIZE = parseInt(page_size) || 9;
+        
         const posts = await postsStore.getPosts({
             sortBy: {
                 field: sort_field,
