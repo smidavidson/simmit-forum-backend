@@ -15,7 +15,6 @@ authRoutes.get("/me", isAuthenticated, async (req, res) => {
 })
 
 authRoutes.post("/register", async (req, res) => {
-    console.log('/auth/register request');
     try {
         const { username, password, email } = req.body;
         if (!username || !password) {

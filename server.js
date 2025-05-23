@@ -6,7 +6,6 @@ import { dirname, sep } from "path";
 import express from "express";
 import rateLimit from "express-rate-limit";
 import { initDatabase } from "./db/init.js";
-import { studentsRoutes } from "./routes/studentsRoutes.js";
 import { authRoutes } from "./routes/authRoutes.js";
 import { s3Routes } from "./routes/s3Routes.js";
 import session from "express-session";
@@ -101,7 +100,7 @@ startServer();
 // Add session debugging middleware
 app.use((req, res, next) => {
     console.log(
-        `\n\n!! Request to ${req.url} Received !!`
+        `\n\n!! Request to ${req.method} at ${req.url} received !!`
     );
     // console.log("Session middleware:", {
     //     sessionID: req.sessionID,
@@ -111,7 +110,6 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use("/students", studentsRoutes);
 app.use("/auth", authRoutes);
 app.use("/posts", postsRoutes);
 app.use("/comments", commentsRoutes);
